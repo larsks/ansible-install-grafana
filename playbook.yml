@@ -4,41 +4,31 @@
   tasks:
     - os_server:
         state: present
-        name: lars_docker
-        image: Fedora27
-        key_name: lars
-        flavor: m1.medium
-        nics:
-          - net-name: lars_network
-        security_groups:
-          - default
-          - webserver
-        meta:
-          ansible_group: docker
+        name: docker_host
+        image: "{{ os_image }}"
+        key_name: "{{ os_key_name }}"
+        flavor: "{{ os_flavor }}"
+        nics: "{{ os_networks }}"
+        security_groups: "{{ os_security_groups }}"
 
     - os_floating_ip:
         state: present
-        server: lars_docker
-        network: public
+        server: docker_host
+        network: "{{ os_public_network }}"
         wait: true
       register: floating_ip
 
     - meta: refresh_inventory
 
-- hosts: lars_docker
+- hosts: docker_host
   gather_facts: false
-  vars:
-    ansible_user: fedora
-    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - wait_for_connection:
 
-- hosts: lars_docker
+- hosts: docker_host
   tags:
     - docker
   vars:
-    ansible_user: fedora
-    ansible_python_interpreter: /usr/bin/python3
     docker_repo_url: https://download.docker.com/linux/fedora/docker-ce.repo
   tasks:
     - package:
@@ -61,7 +51,7 @@
       become: true
 
     - user:
-        name: fedora
+        name: "{{ ansible_user }}"
         groups: docker
         append: true
       become: true
@@ -88,12 +78,9 @@
         enabled: true
       become: true
 
-- hosts: lars_docker
+- hosts: docker_host
   tags:
     - grafana
-  vars:
-    ansible_user: fedora
-    ansible_python_interpreter: /usr/bin/python3
   tasks:
     - file:
         path: ./grafana
