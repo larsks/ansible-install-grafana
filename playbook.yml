@@ -1,0 +1,119 @@
+- hosts: localhost
+  tags:
+    - openstack
+  tasks:
+    - os_server:
+        state: present
+        name: lars_docker
+        image: Fedora27
+        key_name: lars
+        flavor: m1.medium
+        nics:
+          - net-name: lars_network
+        security_groups:
+          - default
+          - webserver
+        meta:
+          ansible_group: docker
+
+    - os_floating_ip:
+        state: present
+        server: lars_docker
+        network: public
+        wait: true
+      register: floating_ip
+
+    - meta: refresh_inventory
+
+- hosts: lars_docker
+  gather_facts: false
+  vars:
+    ansible_user: fedora
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - wait_for_connection:
+
+- hosts: lars_docker
+  tags:
+    - docker
+  vars:
+    ansible_user: fedora
+    ansible_python_interpreter: /usr/bin/python3
+    docker_repo_url: https://download.docker.com/linux/fedora/docker-ce.repo
+  tasks:
+    - package:
+        name: dnf-plugins-core
+        state: installed
+      become: true
+
+    - command: >
+        dnf config-manager --add-repo {{ docker_repo_url }}
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+      become: true
+
+    - package:
+        name: "{{ item }}"
+        state: installed
+      with_items:
+        - docker-ce
+        - docker-compose
+      become: true
+
+    - user:
+        name: fedora
+        groups: docker
+        append: true
+      become: true
+
+    - file:
+        path: /etc/docker
+        state: directory
+        owner: root
+        group: root
+        mode: "0750"
+      become: true
+
+    - template:
+        src: daemon.json
+        dest: /etc/docker/docker.json
+        owner: root
+        group: root
+        mode: "0640"
+      become: true
+
+    - service:
+        name: docker
+        state: started
+        enabled: true
+      become: true
+
+- hosts: lars_docker
+  tags:
+    - grafana
+  vars:
+    ansible_user: fedora
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - file:
+        path: ./grafana
+        state: directory
+
+    - template:
+        src: docker-compose.yml
+        dest: ./grafana/docker-compose.yml
+      vars:
+        docker_floating_ip: "{{ openstack.accessIPv4 }}"
+        grafana_admin_password: >-
+          {{ lookup('password',
+          'credentials/grafana-admin-user length=20') }}
+      register: compose
+
+    - command: docker-compose down
+      args:
+        chdir: ./grafana
+      when: compose|changed
+
+    - command: docker-compose up -d
+      args:
+        chdir: ./grafana

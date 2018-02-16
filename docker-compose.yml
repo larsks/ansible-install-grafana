@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  grafana:
+    image: grafana/grafana
+    volumes:
+      - "grafana:/var/lib/grafana"
+    environment:
+      GF_INSTALL_PLUGINS: "gnocchixyz-gnocchi-datasource"
+      GF_SERVER_ROOT_URL: "http://{{ docker_floating_ip }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+    ports:
+      - "80:3000"
+
+volumes:
+  grafana:
