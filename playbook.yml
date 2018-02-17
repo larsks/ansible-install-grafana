@@ -16,7 +16,6 @@
         server: docker_host
         network: "{{ os_public_network }}"
         wait: true
-      register: floating_ip
 
     - meta: refresh_inventory
 
@@ -77,6 +76,11 @@
         state: started
         enabled: true
       become: true
+
+    - command: docker ps
+      register: docker_active
+      until: docker_active.rc == 0
+      retries: 10
 
 - hosts: docker_host
   tags:
