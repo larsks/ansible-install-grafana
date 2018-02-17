@@ -1,4 +1,9 @@
 ---
+# EXAMPLE CONFIGURATION
+#
+# You will want to change these settings to values that are
+# appropriate for your environment.
+
 os_image: Fedora27
 os_key_name: lars
 os_flavor: m1.medium
