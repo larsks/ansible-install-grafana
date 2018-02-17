@@ -1,4 +1,5 @@
-- hosts: localhost
+- name: provision a server from Nova
+  hosts: localhost
   tags:
     - openstack
   tasks:
@@ -21,16 +22,16 @@
 
     - meta: refresh_inventory
 
-# wait for target host to finish booting
 - hosts: docker_host
   gather_facts: false
   tags:
     - openstack
   tasks:
-    - wait_for_connection:
+    - name: wait for docker host to boot
+      wait_for_connection:
 
-# install and start docker on the target host
-- hosts: docker_host
+- name: install docker
+  hosts: docker_host
   become: true
   tags:
     - docker
@@ -49,8 +50,8 @@
       retries: 60
       delay: 2
 
-# start up grafana container under docker
-- hosts: docker_host
+- name: install and configure grafana
+  hosts: docker_host
   tags:
     - grafana
   roles:
