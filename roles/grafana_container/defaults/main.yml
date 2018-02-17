@@ -1,4 +1,7 @@
 ---
+grafana_image: grafana/grafana
 grafana_admin_password: >-
   {{ lookup('password',
   'credentials/grafana-admin-user length=20') }}
+grafana_bind_address: 0.0.0.0
+grafana_port: 80

@@ -8,8 +8,6 @@
   template:
     src: docker-compose.yml
     dest: ./grafana/docker-compose.yml
-  vars:
-    docker_floating_ip: "{{ openstack.accessIPv4 }}"
   register: compose
 
 - name: shut down compose application
