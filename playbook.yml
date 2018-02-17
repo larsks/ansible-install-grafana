@@ -2,7 +2,8 @@
   tags:
     - openstack
   tasks:
-    - os_server:
+    - name: provision a server
+      os_server:
         state: present
         name: docker_host
         image: "{{ os_image }}"
@@ -11,7 +12,8 @@
         nics: "{{ os_networks }}"
         security_groups: "{{ os_security_groups }}"
 
-    - os_floating_ip:
+    - name: acquire and assign a floating ip
+      os_floating_ip:
         state: present
         server: docker_host
         network: "{{ os_public_network }}"
@@ -19,92 +21,37 @@
 
     - meta: refresh_inventory
 
+# wait for target host to finish booting
 - hosts: docker_host
   gather_facts: false
+  tags:
+    - openstack
   tasks:
     - wait_for_connection:
+
+# install and start docker on the target host
+- hosts: docker_host
+  become: true
+  tags:
+    - docker
+  roles:
+    - docker
 
 - hosts: docker_host
   tags:
     - docker
-  vars:
-    docker_repo_url: https://download.docker.com/linux/fedora/docker-ce.repo
   tasks:
-    - package:
-        name: dnf-plugins-core
-        state: installed
-      become: true
-
-    - command: >
-        dnf config-manager --add-repo {{ docker_repo_url }}
-      args:
-        creates: /etc/yum.repos.d/docker-ce.repo
-      become: true
-
-    - package:
-        name: "{{ item }}"
-        state: installed
-      with_items:
-        - docker-ce
-        - docker-compose
-      become: true
-
-    - user:
-        name: "{{ ansible_user }}"
-        groups: docker
-        append: true
-      become: true
-
-    - file:
-        path: /etc/docker
-        state: directory
-        owner: root
-        group: root
-        mode: "0750"
-      become: true
-
-    - template:
-        src: daemon.json
-        dest: /etc/docker/docker.json
-        owner: root
-        group: root
-        mode: "0640"
-      become: true
-
-    - service:
-        name: docker
-        state: started
-        enabled: true
-      become: true
-
-    - command: docker ps
+    - name: wait for docker to become active
+      command: docker info
+      changed_when: false
       register: docker_active
       until: docker_active.rc == 0
-      retries: 10
+      retries: 60
+      delay: 2
 
+# start up grafana container under docker
 - hosts: docker_host
   tags:
     - grafana
-  tasks:
-    - file:
-        path: ./grafana
-        state: directory
-
-    - template:
-        src: docker-compose.yml
-        dest: ./grafana/docker-compose.yml
-      vars:
-        docker_floating_ip: "{{ openstack.accessIPv4 }}"
-        grafana_admin_password: >-
-          {{ lookup('password',
-          'credentials/grafana-admin-user length=20') }}
-      register: compose
-
-    - command: docker-compose down
-      args:
-        chdir: ./grafana
-      when: compose|changed
-
-    - command: docker-compose up -d
-      args:
-        chdir: ./grafana
+  roles:
+    - grafana_container

@@ -1,0 +1,4 @@
+---
+grafana_admin_password: >-
+  {{ lookup('password',
+  'credentials/grafana-admin-user length=20') }}

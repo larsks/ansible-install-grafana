@@ -8,3 +8,4 @@ os_security_groups:
   - default
   - webserver
 os_public_network: public
+docker_group: wheel

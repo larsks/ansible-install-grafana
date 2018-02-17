@@ -1,6 +1,6 @@
 {
 	"dns": ["8.8.8.8"],
 	"log-driver": "journald",
-	"group": "docker",
+	"group": "{{ docker_group }}",
   "storage-driver": "overlay2"
 }

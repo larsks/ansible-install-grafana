@@ -1,0 +1,44 @@
+---
+# the dnf-plugins-core package includes the config-manager plugin,
+# which we use in the next task.
+- name: install dnf plugins
+  package:
+    name: dnf-plugins-core
+    state: installed
+
+- name: add the docker yum repository
+  command: >
+    dnf config-manager --add-repo {{ docker_repo_url }}
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo
+
+- name: install docker packages
+  package:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - docker-ce
+    - docker-compose
+
+- name: ensure docker config directory exists
+  file:
+    path: /etc/docker
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: create docker configuration
+  template:
+    src: daemon.json
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: start docker daemon
+  service:
+    name: docker
+    state: started
+    enabled: true
+  become: true

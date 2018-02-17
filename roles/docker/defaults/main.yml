@@ -1,0 +1,3 @@
+---
+docker_repo_url: https://download.docker.com/linux/fedora/docker-ce.repo
+docker_group: docker

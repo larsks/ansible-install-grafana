@@ -1,0 +1,24 @@
+---
+- name: create docker-compose project directory
+  file:
+    path: ./grafana
+    state: directory
+
+- name: create docker-compose.yml
+  template:
+    src: docker-compose.yml
+    dest: ./grafana/docker-compose.yml
+  vars:
+    docker_floating_ip: "{{ openstack.accessIPv4 }}"
+  register: compose
+
+- name: shut down compose application
+  command: docker-compose down
+  args:
+    chdir: ./grafana
+  when: compose|changed
+
+- name: start up compose application
+  command: docker-compose up -d
+  args:
+    chdir: ./grafana
