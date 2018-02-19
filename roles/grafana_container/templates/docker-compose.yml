@@ -9,8 +9,20 @@ services:
       GF_INSTALL_PLUGINS: "gnocchixyz-gnocchi-datasource"
       GF_SERVER_ROOT_URL: "http://{{ grafana_address }}"
       GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+
+  haproxy:
+    image: {{ haproxy_image }}
+    volumes:
+      - "./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+{% if haproxy_use_ssl %}
+      - "./server.crt:/usr/local/etc/haproxy/server.crt"
+{% endif %}
     ports:
-      - "{{ grafana_bind_address }}:{{ grafana_port }}:3000"
+{% if haproxy_use_ssl %}
+      - "{{ haproxy_bind_address }}:{{ haproxy_https_port }}:443"
+{% else %}
+      - "{{ haproxy_bind_address }}:{{ haproxy_http_port }}:80"
+{% endif %}
 
 volumes:
   grafana:

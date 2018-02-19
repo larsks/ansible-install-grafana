@@ -1,0 +1,7 @@
+---
+ssl_key_size: 2048
+ssl_key_file: server.key
+ssl_csr_file: server.csr
+ssl_cert_file: server.crt
+ssl_cert_lifetime: 365
+ssl_combined_file: server.combined

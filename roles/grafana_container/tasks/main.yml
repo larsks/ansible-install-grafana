@@ -10,11 +10,23 @@
     dest: ./grafana/docker-compose.yml
   register: compose
 
+- name: create haproxy.cfg
+  template:
+    src: haproxy.cfg
+    dest: ./grafana/haproxy.cfg
+  register: haproxy_cfg
+
+- name: install ssl certificate
+  copy:
+    src: "{{ ssl_cert_file }}"
+    dest: ./grafana/server.crt
+  when: haproxy_use_ssl
+
 - name: shut down compose application
   command: docker-compose down
   args:
     chdir: ./grafana
-  when: compose|changed
+  when: compose|changed or haproxy_cfg|changed
 
 - name: start up compose application
   command: docker-compose up -d

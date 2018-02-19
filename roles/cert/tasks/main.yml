@@ -1,0 +1,37 @@
+---
+- name: ensure we have appropriate configuration
+  assert:
+    that:
+      - ssl_cert_subj is defined
+      - ssl_key_file is defined
+      - ssl_key_size is defined
+      - ssl_csr_file is defined
+      - ssl_cert_file is defined
+
+- name: create ssl certificate key
+  command: >
+    openssl genrsa -out "{{ ssl_key_file }}" {{ ssl_key_size }}
+  args:
+    creates: "{{ ssl_key_file }}"
+
+- name: create ssl certificate request
+  command: >
+    openssl req -batch -new -key "{{ ssl_key_file }}"
+    -out "{{ ssl_csr_file }}" -subj "{{ ssl_cert_subj }}"
+  args:
+    creates: "{{ ssl_csr_file }}"
+
+- name: create self-signed certificate
+  command: >
+    openssl x509 -req -days "{{ ssl_cert_lifetime }}"
+    -in "{{ ssl_csr_file }}" -signkey "{{ ssl_key_file }}"
+    -out "{{ ssl_cert_file }}"
+  args:
+    creates: "{{ ssl_cert_file }}"
+
+- name: create combined certificate
+  shell: >
+    cat "{{ ssl_cert_file }}" "{{ ssl_key_file }}" > "{{ ssl_combined_file }}"
+  args:
+    creates: "{{ ssl_combined_file }}"
+  when: ssl_combined_file is defined

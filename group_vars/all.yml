@@ -14,3 +14,5 @@ os_security_groups:
   - webserver
 os_public_network: public
 docker_group: wheel
+grafana_bind_address: 127.0.0.1
+grafana_port: 3000

@@ -3,5 +3,9 @@ grafana_image: grafana/grafana
 grafana_admin_password: >-
   {{ lookup('password',
   'credentials/grafana-admin-user length=20') }}
-grafana_bind_address: 0.0.0.0
-grafana_port: 80
+
+haproxy_image: haproxy
+haproxy_bind_address: 0.0.0.0
+haproxy_http_port: 80
+haproxy_https_port: 443
+haproxy_use_ssl: true

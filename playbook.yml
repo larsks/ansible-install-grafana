@@ -50,10 +50,16 @@
       retries: 60
       delay: 2
 
+- name: create ssl certificate
+  hosts: localhost
+  roles:
+    - cert
+
 - name: install and configure grafana
   hosts: docker_host
   vars:
     grafana_address: "{{ openstack.accessIPv4 }}"
+    ssl_cert_file: "server.combined"
   tags:
     - grafana
   roles:
