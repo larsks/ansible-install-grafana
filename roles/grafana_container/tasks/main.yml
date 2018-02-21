@@ -1,8 +1,12 @@
 ---
 - name: create docker-compose project directory
   file:
-    path: ./grafana
+    path: "{{ item }}"
     state: directory
+  with_items:
+    - "./grafana"
+    - "./grafana/grafana"
+    - "./grafana/haproxy"
 
 - name: create docker-compose.yml
   template:
@@ -10,25 +14,37 @@
     dest: ./grafana/docker-compose.yml
   register: compose
 
+- name: create grafana configuration
+  template:
+    src: grafana.ini
+    dest: ./grafana/grafana/grafana.ini
+
+- name: create grafana ldap configuration
+  template:
+    src: ldap.toml
+    dest: ./grafana/grafana/ldap.toml
+
 - name: create haproxy.cfg
   template:
     src: haproxy.cfg
-    dest: ./grafana/haproxy.cfg
+    dest: ./grafana/haproxy/haproxy.cfg
   register: haproxy_cfg
 
 - name: install ssl certificate
   copy:
     src: "{{ ssl_cert_file }}"
-    dest: ./grafana/server.crt
+    dest: ./grafana/haproxy/server.crt
   when: haproxy_use_ssl
 
 - name: shut down compose application
+  tags: [compose]
   command: docker-compose down
   args:
     chdir: ./grafana
   when: compose|changed or haproxy_cfg|changed
 
 - name: start up compose application
+  tags: [compose]
   command: docker-compose up -d
   args:
     chdir: ./grafana

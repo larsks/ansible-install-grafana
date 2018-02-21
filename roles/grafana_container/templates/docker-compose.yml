@@ -2,9 +2,10 @@ version: "3"
 
 services:
   grafana:
-    image: {{ grafana_image }}
+    image: "{{ grafana_image }}"
     volumes:
       - "grafana:/var/lib/grafana"
+      - "./grafana:/etc/grafana"
     environment:
       GF_INSTALL_PLUGINS: "gnocchixyz-gnocchi-datasource"
       GF_SERVER_ROOT_URL: "http://{{ grafana_address }}"
@@ -12,12 +13,9 @@ services:
     restart: always
 
   haproxy:
-    image: {{ haproxy_image }}
+    image: "{{ haproxy_image }}"
     volumes:
-      - "./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
-{% if haproxy_use_ssl %}
-      - "./server.crt:/usr/local/etc/haproxy/server.crt"
-{% endif %}
+      - "./haproxy:/usr/local/etc/haproxy"
     ports:
 {% if haproxy_use_ssl %}
       - "{{ haproxy_bind_address }}:{{ haproxy_https_port }}:443"

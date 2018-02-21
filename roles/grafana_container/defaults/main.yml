@@ -9,3 +9,21 @@ haproxy_bind_address: 0.0.0.0
 haproxy_http_port: 80
 haproxy_https_port: 443
 haproxy_use_ssl: true
+
+grafana_enable_ldap: false
+grafana_ldap_config: /etc/grafana/ldap.toml
+grafana_allow_signup: "{{ not grafana_enable_ldap }}"
+grafana_allow_org_create: "{{ not grafana_enable_ldap }}"
+
+grafana_ldap_server: localhost
+grafana_ldap_port: 389
+grafana_ldap_use_ssl: false
+grafana_ldap_start_tls: false
+grafana_ldap_skip_verify: false
+#grafana_ldap_ca_cert:
+grafana_ldap_bind_dn: "cn=admin,dc=grafana,dc=org"
+grafana_ldap_bind_pass: "secret"
+grafana_ldap_search_filter: "(cn=%s)"
+grafana_ldap_search_base_dns: []
+grafana_ldap_group_search_base_dns: []
+grafana_server_group_mappings: []
