@@ -1,0 +1,19 @@
+---
+- hosts: controller
+  tasks:
+    - name: configure cors
+      ini_file:
+        path: "{{ item }}"
+        section: cors
+        option: allowed_origin
+        value: "https://e1-grafana.massopen.cloud"
+      with_items:
+        - /etc/keystone/keystone.conf
+        - /etc/gnocchi/gnocchi.conf
+
+    - name: restart services
+      service:
+        name: "{{ item }}"
+        state: restarted
+      with_items:
+        - httpd
